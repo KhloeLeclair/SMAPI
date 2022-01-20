@@ -36,7 +36,7 @@ namespace StardewModdingAPI.Mods.ErrorHandler.Patches
         public override void Apply(Harmony harmony, IMonitor monitor)
         {
             harmony.Patch(
-                original: this.RequireMethod<GameLocation>(nameof(GameLocation.checkEventPrecondition)),
+                original: this.RequireMethod<GameLocation>(nameof(GameLocation.checkEventPrecondition), new[] { typeof(string), typeof(bool) }),
                 finalizer: this.GetHarmonyMethod(nameof(GameLocationPatcher.Finalize_CheckEventPrecondition))
             );
             harmony.Patch(
@@ -49,7 +49,7 @@ namespace StardewModdingAPI.Mods.ErrorHandler.Patches
         /*********
         ** Private methods
         *********/
-        /// <summary>The method to call when <see cref="GameLocation.checkEventPrecondition"/> throws an exception.</summary>
+        /// <summary>The method to call when <see cref="GameLocation.checkEventPrecondition(string,bool)"/> throws an exception.</summary>
         /// <param name="__result">The return value of the original method.</param>
         /// <param name="precondition">The precondition to be parsed.</param>
         /// <param name="__exception">The exception thrown by the wrapped method, if any.</param>
