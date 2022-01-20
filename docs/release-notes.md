@@ -3,6 +3,7 @@
 # Release notes
 ## Upcoming release for Stardew Valley 1.6
 * For players:
+  * Updated for Stardew Valley 1.6.
   * Removed `player_setimmunity` console command (broke in 1.6 and rarely used).
 
 ## Upcoming release
