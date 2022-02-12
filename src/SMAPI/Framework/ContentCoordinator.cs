@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Framework.Content;
 using StardewModdingAPI.Framework.ContentManagers;
@@ -390,9 +391,18 @@ namespace StardewModdingAPI.Framework
                 // cached assets
                 foreach (IContentManager contentManager in this.ContentManagers)
                 {
-                    foreach ((string key, object asset) in contentManager.InvalidateCache((key, type) => predicate(contentManager, key, type), dispose))
+                    foreach ((string key, object asset) in contentManager.GetCachedAssets())
                     {
+                        Type assetType = asset.GetType();
+
+                        if (!predicate(contentManager, key, assetType))
+                            continue;
+
                         AssetName assetName = this.ParseAssetName(key, allowLocales: true);
+
+                        if (asset is not Texture2D) // will edit in place
+                            contentManager.InvalidateCache(assetName, dispose);
+
                         if (!invalidatedAssets.ContainsKey(assetName))
                             invalidatedAssets[assetName] = asset.GetType();
                     }
@@ -427,6 +437,7 @@ namespace StardewModdingAPI.Framework
 
                 // propagate changes to the game
                 this.CoreAssets.Propagate(
+                    contentManagers: this.ContentManagers,
                     assets: invalidatedAssets.ToDictionary(p => p.Key, p => p.Value),
                     ignoreWorld: Context.IsWorldFullyUnloaded,
                     out IDictionary<IAssetName, bool> propagated,

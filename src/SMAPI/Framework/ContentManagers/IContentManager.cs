@@ -64,10 +64,13 @@ namespace StardewModdingAPI.Framework.ContentManagers
         /// <param name="assetName">The asset path relative to the loader root directory, not including the <c>.xnb</c> extension.</param>
         bool IsLoaded(IAssetName assetName);
 
+        /// <summary>Get all assets in the cache.</summary>
+        IEnumerable<KeyValuePair<string, object>> GetCachedAssets();
+
         /// <summary>Purge matched assets from the cache.</summary>
-        /// <param name="predicate">Matches the asset keys to invalidate.</param>
+        /// <param name="assetName">The asset name to dispose.</param>
         /// <param name="dispose">Whether to dispose invalidated assets. This should only be <c>true</c> when they're being invalidated as part of a dispose, to avoid crashing the game.</param>
-        /// <returns>Returns the invalidated asset names and instances.</returns>
-        IDictionary<string, object> InvalidateCache(Func<string, Type, bool> predicate, bool dispose = false);
+        /// <returns>Returns whether the asset was in the cache.</returns>
+        bool InvalidateCache(IAssetName assetName, bool dispose = false);
     }
 }
