@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Xna.Framework.Graphics;
@@ -57,16 +56,14 @@ namespace StardewModdingAPI.Framework.ContentManagers
         {
             this.OnLoadingFirstAsset = onLoadingFirstAsset;
             this.OnAssetLoaded = onAssetLoaded;
+
+            this.CheckGameFolderForAssetExists = true;
         }
 
         /// <inheritdoc />
         public override bool DoesAssetExist<T>(IAssetName assetName)
         {
             if (base.DoesAssetExist<T>(assetName))
-                return true;
-
-            // vanilla asset
-            if (File.Exists(Path.Combine(this.RootDirectory, $"{assetName.Name}.xnb")))
                 return true;
 
             // managed asset
@@ -76,7 +73,7 @@ namespace StardewModdingAPI.Framework.ContentManagers
             // custom asset from a loader
             string locale = this.GetLocale();
             IAssetInfo info = new AssetInfo(locale, assetName, typeof(T), this.AssertAndNormalizeAssetName);
-            AssetLoadOperation[] loaders = this.GetLoaders<object>(info).ToArray();
+            AssetLoadOperation[] loaders = this.GetLoaders<T>(info).ToArray();
 
             if (!this.AssertMaxOneRequiredLoader(info, loaders, out string error))
             {

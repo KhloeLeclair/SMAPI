@@ -82,13 +82,13 @@ namespace StardewModdingAPI.Framework.ContentManagers
         /// <inheritdoc />
         public override T LoadExact<T>(IAssetName assetName, bool useCache)
         {
-            // disable caching
+            //
+            // Note: caching is ignored for mod content.
             // This is necessary to avoid assets being shared between content managers, which can
             // cause changes to an asset through one content manager affecting the same asset in
             // others (or even fresh content managers). See https://www.patreon.com/posts/27247161
             // for more background info.
-            if (useCache)
-                throw new InvalidOperationException("Mod content managers don't support asset caching.");
+            //
 
             // resolve managed asset key
             {

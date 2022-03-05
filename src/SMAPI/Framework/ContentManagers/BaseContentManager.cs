@@ -7,6 +7,7 @@ using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI.Framework.Content;
@@ -50,6 +51,12 @@ namespace StardewModdingAPI.Framework.ContentManagers
         /// <summary>The disposable assets tracked by the base content manager.</summary>
         /// <remarks>This should be kept empty to avoid keeping disposable assets referenced forever, which prevents garbage collection when they're unused. Disposable assets are tracked by <see cref="Disposables"/> instead, which avoids a hard reference.</remarks>
         private readonly List<IDisposable> BaseDisposableReferences;
+
+        /// <summary>A cache of proxy wrappers for the <see cref="ContentManager.Load{T}"/> method.</summary>
+        private readonly Dictionary<Type, object> BaseLoadProxyCache = new();
+
+        /// <summary>Whether to check the game folder in the base <see cref="DoesAssetExist{T}(IAssetName)"/> implementation.</summary>
+        protected bool CheckGameFolderForAssetExists;
 
 
         /*********
@@ -99,30 +106,31 @@ namespace StardewModdingAPI.Framework.ContentManagers
         }
 
         /// <inheritdoc />
+        [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "Inherited from base method.")]
+        public sealed override bool DoesAssetExist<T>(string localized_asset_name)
+        {
+            if (string.IsNullOrWhiteSpace(localized_asset_name))
+                return false;
+
+            IAssetName assetName = this.Coordinator.ParseAssetName(this.PrenormalizeRawAssetName(localized_asset_name), allowLocales: this.TryLocalizeKeys);
+            return this.DoesAssetExist<T>(assetName);
+        }
+
+        /// <inheritdoc />
         public virtual bool DoesAssetExist<T>(IAssetName assetName)
         {
+            if (this.CheckGameFolderForAssetExists && base.DoesAssetExist<T>(assetName.Name))
+                return true;
+
             return this.Cache.ContainsKey(assetName.Name);
         }
 
         /// <inheritdoc />
-        [Obsolete("This method is implemented for the base game and should not be used directly. To load an asset from the underlying content manager directly, use " + nameof(BaseContentManager.RawLoad) + " instead.")]
-        public sealed override T LoadBase<T>(string assetName)
+        [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "Inherited from base method.")]
+        public sealed override T LoadImpl<T>(string base_asset_name, string localized_asset_name, LanguageCode language_code)
         {
-            return this.Load<T>(assetName, LanguageCode.en);
-        }
-
-        /// <inheritdoc />
-        public sealed override T Load<T>(string assetName)
-        {
-            return this.Load<T>(assetName, this.Language);
-        }
-
-        /// <inheritdoc />
-        public sealed override T Load<T>(string assetName, LanguageCode language)
-        {
-            assetName = this.PrenormalizeRawAssetName(assetName);
-            IAssetName parsedName = this.Coordinator.ParseAssetName(assetName, allowLocales: this.TryLocalizeKeys);
-            return this.LoadLocalized<T>(parsedName, language, useCache: true);
+            IAssetName assetName = this.Coordinator.ParseAssetName(this.PrenormalizeRawAssetName(localized_asset_name), allowLocales: this.TryLocalizeKeys);
+            return this.LoadExact<T>(assetName, useCache: true);
         }
 
         /// <inheritdoc />
@@ -308,9 +316,22 @@ namespace StardewModdingAPI.Framework.ContentManagers
         /// <param name="useCache">Whether to read/write the loaded asset to the asset cache.</param>
         protected virtual T RawLoad<T>(IAssetName assetName, bool useCache)
         {
-            return useCache
-                ? base.LoadBase<T>(assetName.Name)
-                : this.ReadAsset<T>(assetName.Name, disposable => this.Disposables.Add(new WeakReference<IDisposable>(disposable)));
+            if (useCache)
+            {
+                if (!this.BaseLoadProxyCache.TryGetValue(typeof(T), out object cacheEntry))
+                {
+                    MethodInfo method = typeof(ContentManager).GetMethod(nameof(ContentManager.Load)) ?? throw new InvalidOperationException($"Can't get required method '{nameof(ContentManager)}.{nameof(ContentManager.Load)}'.");
+                    method = method.MakeGenericMethod(typeof(T));
+                    IntPtr pointer = method.MethodHandle.GetFunctionPointer();
+                    this.BaseLoadProxyCache[typeof(T)] = cacheEntry = Activator.CreateInstance(typeof(Func<string, T>), this, pointer) ?? throw new InvalidOperationException($"Can't proxy required method '{nameof(ContentManager)}.{nameof(ContentManager.Load)}'.");
+                }
+
+                Func<string, T> baseLoad = (Func<string, T>)cacheEntry;
+
+                return baseLoad(assetName.Name);
+            }
+
+            return this.ReadAsset<T>(assetName.Name, disposable => this.Disposables.Add(new WeakReference<IDisposable>(disposable)));
         }
 
         /// <summary>Add tracking data to an asset and add it to the cache.</summary>
