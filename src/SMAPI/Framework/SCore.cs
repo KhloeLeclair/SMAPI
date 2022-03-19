@@ -249,7 +249,7 @@ namespace StardewModdingAPI.Framework
                     monitor: this.Monitor,
                     reflection: this.Reflection,
                     eventManager: this.EventManager,
-                    modHooks: new SModHooks(this.OnNewDayAfterFade, this.Monitor),
+                    modHooks: new SModHooks(this.OnNewDayAfterFade, this.OnLoadStageChanged, this.Monitor),
                     multiplayer: this.Multiplayer,
                     exitGameImmediately: this.ExitGameImmediately,
 
