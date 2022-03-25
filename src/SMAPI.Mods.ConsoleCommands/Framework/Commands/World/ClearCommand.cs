@@ -21,7 +21,7 @@ namespace StardewModdingAPI.Mods.ConsoleCommands.Framework.Commands.World
         private readonly string[] ValidTypes = { "crops", "debris", "fruit-trees", "furniture", "grass", "trees", "removable", "everything" };
 
         /// <summary>The resource clump IDs to consider debris.</summary>
-        private readonly int[] DebrisClumps = { ResourceClump.stumpIndex, ResourceClump.hollowLogIndex, ResourceClump.meteoriteIndex, ResourceClump.boulderIndex };
+        private readonly string[] DebrisClumps = { ResourceClump.stumpIndex, ResourceClump.hollowLogIndex, ResourceClump.meteoriteIndex, ResourceClump.boulderIndex };
 
 
         /*********
