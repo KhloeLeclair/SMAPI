@@ -371,7 +371,7 @@ namespace StardewModdingAPI.Framework
                 }
 
                 Game1.currentMinigame.draw(Game1.spriteBatch);
-                if (Game1.globalFade && !Game1.menuUp && (!Game1.nameSelectUp || Game1.messagePause))
+                if (Game1.globalFade)
                 {
                     Game1.PushUIMode();
                     Game1.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp);
@@ -588,17 +588,13 @@ namespace StardewModdingAPI.Framework
                     if (tile != null)
                     {
                         Vector2 vector_draw_position = Game1.GlobalToLocal(Game1.viewport, tile_position * 64f);
-                        Location draw_location = new((int)vector_draw_position.X, (int)vector_draw_position.Y);
+                        Location draw_location = new Location((int)vector_draw_position.X, (int)vector_draw_position.Y);
                         Game1.mapDisplayDevice.DrawTile(tile, draw_location, (tile_position.Y * 64f - 1f) / 10000f);
                     }
                 }
-                if (Game1.player.ActiveObject == null && (Game1.player.UsingTool || Game1.pickingTool) && Game1.player.CurrentTool != null && (!Game1.player.CurrentTool.Name.Equals("Seeds") || Game1.pickingTool))
+                if (Game1.player.ActiveObject == null && Game1.player.UsingTool && Game1.player.CurrentTool != null)
                 {
                     Game1.drawTool(Game1.player);
-                }
-                if (Game1.tvStation >= 0)
-                {
-                    Game1.spriteBatch.Draw(Game1.tvStationTexture, Game1.GlobalToLocal(Game1.viewport, new Vector2(400f, 160f)), new Microsoft.Xna.Framework.Rectangle(Game1.tvStation * 24, 0, 24, 15), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 1E-08f);
                 }
                 if (Game1.panMode)
                 {
@@ -733,11 +729,7 @@ namespace StardewModdingAPI.Framework
                 {
                     Game1.currentLocation.DrawFarmerUsernames(Game1.spriteBatch);
                 }
-                if (Game1.currentBillboard != 0 && !this.takingMapScreenshot)
-                {
-                    this.drawBillboard();
-                }
-                if (!Game1.eventUp && Game1.farmEvent == null && Game1.currentBillboard == 0 && Game1.gameMode == 3 && !this.takingMapScreenshot && Game1.isOutdoorMapSmallerThanViewport())
+                if (!Game1.eventUp && Game1.farmEvent == null && Game1.gameMode == 3 && !this.takingMapScreenshot && Game1.isOutdoorMapSmallerThanViewport())
                 {
                     Game1.spriteBatch.Draw(Game1.fadeToBlackRect, new Microsoft.Xna.Framework.Rectangle(0, 0, -Game1.viewport.X, Game1.graphics.GraphicsDevice.Viewport.Height), Color.Black);
                     Game1.spriteBatch.Draw(Game1.fadeToBlackRect, new Microsoft.Xna.Framework.Rectangle(-Game1.viewport.X + Game1.currentLocation.map.Layers[0].LayerWidth * 64, 0, Game1.graphics.GraphicsDevice.Viewport.Width - (-Game1.viewport.X + Game1.currentLocation.map.Layers[0].LayerWidth * 64), Game1.graphics.GraphicsDevice.Viewport.Height), Color.Black);
@@ -747,7 +739,7 @@ namespace StardewModdingAPI.Framework
                 Game1.spriteBatch.End();
                 Game1.PushUIMode();
                 Game1.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp);
-                if ((Game1.displayHUD || Game1.eventUp) && Game1.currentBillboard == 0 && Game1.gameMode == 3 && !Game1.freezeControls && !Game1.panMode && !Game1.HostPaused && !this.takingMapScreenshot)
+                if ((Game1.displayHUD || Game1.eventUp) && Game1.gameMode == 3 && !Game1.freezeControls && !Game1.panMode && !Game1.HostPaused && !this.takingMapScreenshot)
                 {
                     events.RenderingHud.RaiseEmpty();
                     this.drawHUD();
@@ -775,7 +767,7 @@ namespace StardewModdingAPI.Framework
                 Game1.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp);
             }
             Game1.PushUIMode();
-            if (Game1.dialogueUp && !Game1.nameSelectUp && !Game1.messagePause && (Game1.activeClickableMenu == null || !(Game1.activeClickableMenu is DialogueBox)) && !this.takingMapScreenshot)
+            if (Game1.dialogueUp && !Game1.messagePause && (Game1.activeClickableMenu == null || !(Game1.activeClickableMenu is DialogueBox)) && !this.takingMapScreenshot)
             {
                 this.drawDialogueBox();
             }
@@ -795,7 +787,7 @@ namespace StardewModdingAPI.Framework
             {
                 Game1.spriteBatch.Draw(Game1.staminaRect, Game1.graphics.GraphicsDevice.Viewport.Bounds, Color.Blue * 0.2f);
             }
-            if ((Game1.fadeToBlack || Game1.globalFade) && !Game1.menuUp && (!Game1.nameSelectUp || Game1.messagePause) && !this.takingMapScreenshot)
+            if ((Game1.fadeToBlack || Game1.globalFade) && !this.takingMapScreenshot)
             {
                 Game1.spriteBatch.End();
                 Game1.PushUIMode();
@@ -869,10 +861,6 @@ namespace StardewModdingAPI.Framework
             Game1.spriteBatch.End();
             Game1.PushUIMode();
             Game1.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp);
-            if (Game1.showKeyHelp && !this.takingMapScreenshot)
-            {
-                Game1.spriteBatch.DrawString(Game1.smallFont, Game1.keyHelpString, new Vector2(64f, (float)(Game1.viewport.Height - 64 - (Game1.dialogueUp ? (192 + (Game1.isQuestion ? (Game1.questionChoices.Count * 64) : 0)) : 0)) - Game1.smallFont.MeasureString(Game1.keyHelpString).Y), Color.LightGray, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0.9999999f);
-            }
             if (Game1.activeClickableMenu != null && !this.takingMapScreenshot)
             {
                 IClickableMenu curMenu = null;
