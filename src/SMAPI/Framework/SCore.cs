@@ -254,6 +254,7 @@ namespace StardewModdingAPI.Framework
                     monitor: this.Monitor,
                     reflection: this.Reflection,
                     modHooks: new SModHooks(
+                        parent: new ModHooks(),
                         monitor: this.Monitor,
                         beforeNewDayAfterFade: this.OnNewDayAfterFade,
                         onStageChanged: this.OnLoadStageChanged,

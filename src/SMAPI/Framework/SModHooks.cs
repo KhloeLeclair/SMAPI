@@ -1,16 +1,19 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI.Enums;
 using StardewModdingAPI.Internal;
+using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.Menus;
 
 namespace StardewModdingAPI.Framework
 {
     /// <summary>Invokes callbacks for mod hooks provided by the game.</summary>
-    internal class SModHooks : ModHooks
+    [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "Inherited from the game code.")]
+    internal class SModHooks : DelegatingModHooks
     {
         /*********
         ** Fields
@@ -35,12 +38,14 @@ namespace StardewModdingAPI.Framework
         ** Public methods
         *********/
         /// <summary>Construct an instance.</summary>
+        /// <param name="parent">The original game hooks.</param>
         /// <param name="monitor">Writes messages to the console.</param>
         /// <param name="beforeNewDayAfterFade">A callback to invoke before <see cref="Game1.newDayAfterFade"/> runs.</param>
         /// <param name="onStageChanged">A callback to invoke when the load stage changes.</param>
         /// <param name="onRenderingStep">A callback to invoke when the game starts a render step in the draw loop.</param>
         /// <param name="onRenderedStep">A callback to invoke when the game finishes a render step in the draw loop.</param>
-        public SModHooks(IMonitor monitor, Action beforeNewDayAfterFade, Action<LoadStage> onStageChanged, Action<RenderSteps, SpriteBatch> onRenderingStep, Action<RenderSteps, SpriteBatch> onRenderedStep)
+        public SModHooks(ModHooks parent, IMonitor monitor, Action beforeNewDayAfterFade, Action<LoadStage> onStageChanged, Action<RenderSteps, SpriteBatch> onRenderingStep, Action<RenderSteps, SpriteBatch> onRenderedStep)
+            : base(parent)
         {
             this.Monitor = monitor;
             this.BeforeNewDayAfterFade = beforeNewDayAfterFade;
@@ -49,17 +54,14 @@ namespace StardewModdingAPI.Framework
             this.OnRenderedStep = onRenderedStep;
         }
 
-        /// <summary>A hook invoked when <see cref="Game1.newDayAfterFade"/> is called.</summary>
-        /// <param name="action">The vanilla <see cref="Game1.newDayAfterFade"/> logic.</param>
+        /// <inheritdoc />
         public override void OnGame1_NewDayAfterFade(Action action)
         {
             this.BeforeNewDayAfterFade.Invoke();
             action();
         }
 
-        /// <summary>Start an asynchronous task for the game.</summary>
-        /// <param name="task">The task to start.</param>
-        /// <param name="id">A unique key which identifies the task.</param>
+        /// <inheritdoc />
         public override Task StartTask(Task task, string id)
         {
             this.Monitor.Log($"Synchronizing '{id}' task...");
@@ -68,9 +70,7 @@ namespace StardewModdingAPI.Framework
             return task;
         }
 
-        /// <summary>Start an asynchronous task for the game.</summary>
-        /// <param name="task">The task to start.</param>
-        /// <param name="id">A unique key which identifies the task.</param>
+        /// <inheritdoc />
         public override Task<T> StartTask<T>(Task<T> task, string id)
         {
             this.Monitor.Log($"Synchronizing '{id}' task...");
@@ -79,51 +79,38 @@ namespace StardewModdingAPI.Framework
             return task;
         }
 
-        /// <summary>A hook invoked when creating a new save slot, after the game has added the location instances but before it fully initializes them.</summary>
+        /// <inheritdoc />
         public override void CreatedInitialLocations()
         {
             this.OnStageChanged(LoadStage.CreatedInitialLocations);
         }
 
-        /// <summary>A hook invoked when loading a save slot, after the game has added the location instances but before it restores their save data. Not applicable when connecting to a multiplayer host.</summary>
+        /// <inheritdoc />
         public override void SaveAddedLocations()
         {
             this.OnStageChanged(LoadStage.SaveAddedLocations);
         }
 
-        /// <summary>A hook invoked when the game starts a render step in the draw loop.</summary>
-        /// <param name="step">The render step being started.</param>
-        /// <param name="spriteBatch">The sprite batch being drawn (which might not always be open yet).</param>
-        /// <param name="gameTime">A snapshot of the game timing state.</param>
-        /// <param name="targetScreen">The render target, if any.</param>
-        /// <returns>Returns whether to continue with the render step.</returns>
-        public override bool OnRendering(RenderSteps step, SpriteBatch spriteBatch, GameTime gameTime, RenderTarget2D targetScreen)
+        /// <inheritdoc />
+        public override bool OnRendering(RenderSteps step, SpriteBatch sb, GameTime time, RenderTarget2D target_screen)
         {
-            this.OnRenderingStep(step, spriteBatch);
+            this.OnRenderingStep(step, sb);
 
             return true;
         }
 
-        /// <summary>A hook invoked when the game starts a render step in the draw loop.</summary>
-        /// <param name="step">The render step being started.</param>
-        /// <param name="spriteBatch">The sprite batch being drawn (which might not always be open yet).</param>
-        /// <param name="gameTime">A snapshot of the game timing state.</param>
-        /// <param name="targetScreen">The render target, if any.</param>
-        /// <returns>Returns whether to continue with the render step.</returns>
-        public override void OnRendered(RenderSteps step, SpriteBatch spriteBatch, GameTime gameTime, RenderTarget2D targetScreen)
+        /// <inheritdoc />
+        public override void OnRendered(RenderSteps step, SpriteBatch sb, GameTime time, RenderTarget2D target_screen)
         {
-            this.OnRenderedStep(step, spriteBatch);
+            this.OnRenderedStep(step, sb);
         }
 
-        /// <summary>Draw a menu (or child menu) if possible.</summary>
-        /// <param name="menu">The menu to draw.</param>
-        /// <param name="drawMenu">The action which draws the menu.</param>
-        /// <returns>Returns whether the menu was successfully drawn.</returns>
-        public override bool TryDrawMenu(IClickableMenu menu, Action drawMenu)
+        /// <inheritdoc />
+        public override bool TryDrawMenu(IClickableMenu menu, Action draw_menu_action)
         {
             try
             {
-                drawMenu();
+                draw_menu_action();
                 return true;
             }
             catch (Exception ex)

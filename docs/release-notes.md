@@ -8,6 +8,9 @@
   * Removed `list_item_types` (no longer needed) and `player_setimmunity` (broke in 1.6 and rarely used).
   * Removed `player_setimmunity` console command (broke in 1.6 and rarely used).
 
+* For mod authors:
+  * Added `DelegatingModHooks` utility for rare cases where a mod needs to override SMAPI's mod hooks in the game directly.
+
 ## Upcoming release
 ### For players
 * Changes:
