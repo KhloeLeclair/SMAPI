@@ -47,6 +47,13 @@ namespace StardewModdingAPI.Framework.ModHelpers
         }
 
         /// <inheritdoc />
+        public bool DoesAssetExist<T>(IAssetName assetName)
+            where T : notnull
+        {
+            return this.ModContentManager.DoesAssetExist<T>(assetName);
+        }
+
+        /// <inheritdoc />
         public T Load<T>(string relativePath)
             where T : notnull
         {
