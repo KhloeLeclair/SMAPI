@@ -11,10 +11,12 @@ namespace StardewModdingAPI
         /*********
         ** Public methods
         *********/
-        /// <summary>Get whether an asset exists and can be loaded.</summary>
+        /// <summary>Get whether a file within the mod folder exists.</summary>
         /// <typeparam name="T">The expected asset type.</typeparam>
-        /// <param name="assetName">The normalized asset name.</param>
-        bool DoesAssetExist<T>(IAssetName assetName)
+        /// <param name="relativePath">The local path to a content file relative to the mod folder.</param>
+        /// <exception cref="ArgumentException">The <paramref name="relativePath"/> is empty or contains invalid characters.</exception>
+        /// <exception cref="ContentLoadException">The content asset couldn't be loaded (e.g. because it doesn't exist).</exception>
+        bool DoesAssetExist<T>(string relativePath)
             where T : notnull;
 
         /// <summary>Load content from the mod folder and return it. When loading a <c>.png</c> file, this must be called outside the game's draw loop.</summary>
